@@ -237,6 +237,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="missing_metadata",
             description=f"Missing required metadata: {fields}",
+            payload=payload,
         )
 
     schema_version = payload["schema_version"]
@@ -247,6 +248,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="invalid_metadata",
             description="schema_version must be an integer",
+            payload=payload,
         )
 
     if schema_version != SUPPORTED_SCHEMA_VERSION:
@@ -255,6 +257,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="unsupported_schema",
             description=f"Unsupported schema version: {schema_version}",
+            payload=payload,
         )
 
     device_id = payload["device_id"]
@@ -265,6 +268,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="invalid_metadata",
             description="device_id must be a non-empty string",
+            payload=payload,
         )
 
     if device_id != topic_device_id:
@@ -273,6 +277,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="device_id_mismatch",
             description="Payload device_id does not match the MQTT topic",
+            payload=payload,
         )
 
     boot_id = payload["boot_id"]
@@ -283,6 +288,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="invalid_metadata",
             description="boot_id must be a non-empty string",
+            payload=payload,
         )
 
     if not _is_non_negative_integer(payload["sequence"]):
@@ -291,6 +297,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="invalid_metadata",
             description="sequence must be a non-negative integer",
+            payload=payload,
         )
 
     if not _is_non_negative_integer(payload["uptime_ms"]):
@@ -299,6 +306,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="invalid_metadata",
             description="uptime_ms must be a non-negative integer",
+            payload=payload,
         )
 
     if not isinstance(payload["measurements"], dict):
@@ -307,6 +315,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="invalid_metadata",
             description="measurements must be an object",
+            payload=payload,
         )
 
     if not isinstance(payload["sensor_status"], dict):
@@ -315,6 +324,7 @@ def _validate_metadata(
             timestamp=timestamp,
             reason_code="invalid_metadata",
             description="sensor_status must be an object",
+            payload=payload,
         )
 
     return None
@@ -334,8 +344,9 @@ def _build_message_rejection(
     timestamp: str,
     reason_code: str,
     description: str,
+    payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    return {
+    rejection: dict[str, Any] = {
         "schema_version": SUPPORTED_SCHEMA_VERSION,
         "device_id": topic_device_id,
         "timestamp": timestamp,
@@ -343,6 +354,20 @@ def _build_message_rejection(
         "reason_code": reason_code,
         "description": description,
     }
+
+    # Carry boot_id/sequence through when the source payload has them, even
+    # though the message is being rejected, so the backend can still
+    # deduplicate this rejection on MQTT QoS 1 redelivery.
+    if isinstance(payload, dict):
+        boot_id = payload.get("boot_id")
+        if isinstance(boot_id, str) and boot_id.strip():
+            rejection["boot_id"] = boot_id
+
+        sequence = payload.get("sequence")
+        if _is_non_negative_integer(sequence):
+            rejection["sequence"] = sequence
+
+    return rejection
 
 
 def _build_rejection(

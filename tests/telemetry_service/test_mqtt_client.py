@@ -157,3 +157,83 @@ def test_new_sequence_or_boot_is_published(monkeypatch):
         service._on_message(None, None, message)
 
     assert publish_json.call_count == 3
+
+def test_partial_publish_failure_does_not_republish_succeeded_measurements(monkeypatch):
+    validated = [
+        {
+            "device_id": "esp32s3-01",
+            "boot_id": "boot-1",
+            "sequence": 7,
+            "measurement": "internal_temperature",
+            "value": 23.6,
+        },
+        {
+            "device_id": "esp32s3-01",
+            "boot_id": "boot-1",
+            "sequence": 7,
+            "measurement": "water_temperature",
+            "value": 19.4,
+        },
+    ]
+    monkeypatch.setattr(
+        mqtt_client,
+        "validate_raw_payload",
+        Mock(return_value=(validated, [])),
+    )
+
+    service = object.__new__(TelemetryMqttService)
+    service._recent_message_keys = mqtt_client.OrderedDict()
+
+    message = SimpleNamespace(
+        topic="telemetry/v1/devices/esp32s3-01/telemetry/raw",
+        payload=b'{"boot_id":"boot-1","sequence":7}',
+    )
+
+    # First delivery: internal_temperature fails to publish, water_temperature succeeds.
+    monkeypatch.setattr(
+        service,
+        "_publish_json",
+        Mock(side_effect=[False, True]),
+    )
+    service._on_message(None, None, message)
+
+    # Broker redelivers the same raw message (e.g. QoS 1 retry).
+    retry_publish_json = Mock(return_value=True)
+    monkeypatch.setattr(service, "_publish_json", retry_publish_json)
+    service._on_message(None, None, message)
+
+    # Only the measurement that failed the first time should be retried.
+    assert retry_publish_json.call_count == 1
+    assert retry_publish_json.call_args.kwargs["topic"].endswith(
+        "internal_temperature"
+    )
+
+
+def test_duplicate_message_level_rejection_is_published_only_once(monkeypatch):
+    rejected = [{
+        "device_id": "esp32s3-01",
+        "boot_id": "boot-1",
+        "sequence": 9,
+        "rejection_scope": "message",
+        "reason_code": "unsupported_schema",
+    }]
+    monkeypatch.setattr(
+        mqtt_client,
+        "validate_raw_payload",
+        Mock(return_value=([], rejected)),
+    )
+
+    service = object.__new__(TelemetryMqttService)
+    service._recent_message_keys = mqtt_client.OrderedDict()
+    publish_json = Mock(return_value=True)
+    monkeypatch.setattr(service, "_publish_json", publish_json)
+
+    message = SimpleNamespace(
+        topic="telemetry/v1/devices/esp32s3-01/telemetry/raw",
+        payload=b'{"boot_id":"boot-1","sequence":9}',
+    )
+
+    service._on_message(None, None, message)
+    service._on_message(None, None, message)
+
+    assert publish_json.call_count == 1

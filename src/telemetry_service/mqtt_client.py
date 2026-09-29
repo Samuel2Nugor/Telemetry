@@ -14,7 +14,10 @@ LOGGER = logging.getLogger(__name__)
 BASE_TOPIC = "telemetry/v1/devices"
 RAW_TOPIC_FILTER = f"{BASE_TOPIC}/+/telemetry/raw"
 MQTT_QOS = 1
-MAX_RECENT_MESSAGES = 4096
+# Deduplication is now per measurement rather than per raw message (up to
+# four keys per telemetry cycle), so the cap is raised to keep roughly the
+# same wall-clock dedup window.
+MAX_RECENT_MESSAGES = 16384
 
 
 class TelemetryMqttService:
@@ -118,44 +121,57 @@ class TelemetryMqttService:
             len(rejected),
         )
 
-        message_key = None
-        for payload in validated + rejected:
-            if "boot_id" in payload and "sequence" in payload:
-                message_key = (
-                    device_id,
-                    payload["boot_id"],
-                    payload["sequence"],
-                )
-                break
-
-        if message_key in self._recent_message_keys:
-            LOGGER.info("Dropping duplicate telemetry: key=%s", message_key)
-            return
-
-        all_published = True
-
         for payload in validated:
             topic = build_validated_topic(
                 device_id=device_id,
                 measurement=payload["measurement"],
             )
-            if not self._publish_json(topic=topic, payload=payload):
-                all_published = False
+            self._publish_deduplicated(
+                device_id=device_id,
+                payload=payload,
+                topic=topic,
+                dedup_suffix=payload["measurement"],
+            )
 
         rejected_topic = build_rejected_topic(device_id=device_id)
 
         for payload in rejected:
-            if not self._publish_json(
-                topic=rejected_topic,
+            self._publish_deduplicated(
+                device_id=device_id,
                 payload=payload,
-            ):
-                all_published = False
+                topic=rejected_topic,
+                dedup_suffix=payload.get("measurement", "message"),
+            )
 
-        if message_key is not None and all_published:
-            self._recent_message_keys[message_key] = None
+    def _publish_deduplicated(
+        self,
+        *,
+        device_id: str,
+        payload: dict[str, Any],
+        topic: str,
+        dedup_suffix: str,
+    ) -> None:
+        # Deduplicate per measurement (not per raw MQTT message): if only
+        # some of a message's measurements published successfully before a
+        # QoS 1 redelivery, only the ones that actually failed get retried
+        # instead of republishing everything and double-counting in Influx.
+        key = _dedup_key(
+            device_id=device_id,
+            payload=payload,
+            suffix=dedup_suffix,
+        )
+
+        if key is not None and key in self._recent_message_keys:
+            LOGGER.info("Dropping duplicate telemetry: key=%s", key)
+            return
+
+        if not self._publish_json(topic=topic, payload=payload):
+            return
+
+        if key is not None:
+            self._recent_message_keys[key] = None
             if len(self._recent_message_keys) > MAX_RECENT_MESSAGES:
                 self._recent_message_keys.popitem(last=False)
-
 
     def _publish_json(
         self,
@@ -192,6 +208,26 @@ class TelemetryMqttService:
         return True
 
 
+
+
+def _dedup_key(
+    *,
+    device_id: str,
+    payload: dict[str, Any],
+    suffix: str,
+) -> tuple[str, str, int, str] | None:
+    boot_id = payload.get("boot_id")
+    sequence = payload.get("sequence")
+
+    if (
+        not isinstance(boot_id, str)
+        or not boot_id
+        or not isinstance(sequence, int)
+        or isinstance(sequence, bool)
+    ):
+        return None
+
+    return (device_id, boot_id, sequence, suffix)
 
 
 def current_utc_timestamp() -> str:

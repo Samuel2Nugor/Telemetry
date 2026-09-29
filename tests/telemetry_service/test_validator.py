@@ -107,6 +107,21 @@ def test_unsupported_schema_rejects_entire_message():
     assert rejected[0]["reason_code"] == "unsupported_schema"
 
 
+def test_message_level_rejection_preserves_boot_id_and_sequence_when_present():
+    payload = deepcopy(VALID_PAYLOAD)
+    payload["schema_version"] = 2
+
+    validated, rejected = validate_raw_message(
+        payload,
+        topic_device_id="esp32s3-01",
+        timestamp=TIMESTAMP,
+    )
+
+    assert validated == []
+    assert rejected[0]["boot_id"] == VALID_PAYLOAD["boot_id"]
+    assert rejected[0]["sequence"] == VALID_PAYLOAD["sequence"]
+
+
 def test_missing_metadata_rejects_entire_message():
     payload = deepcopy(VALID_PAYLOAD)
     del payload["boot_id"]
