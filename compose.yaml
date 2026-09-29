@@ -10,7 +10,7 @@ services:
         - CMD-SHELL
         - >-
           mosquitto_pub -h localhost -p 8883
-          --cafile /mosquitto/certs/ca.crt
+          --cafile /mosquitto/certs/ca.crt --insecure
           -u "$$MQTT_HEALTHCHECK_USERNAME"
           -P "$$MQTT_HEALTHCHECK_PASSWORD"
           -V mqttv5 -q 1

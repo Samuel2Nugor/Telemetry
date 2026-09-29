@@ -21,6 +21,25 @@ static int s_retry_count;
 static esp_event_handler_instance_t s_wifi_event_handler;
 static esp_event_handler_instance_t s_ip_event_handler;
 
+/*
+ * esp_wifi_connect() legitimately returns non-OK for transient driver
+ * states (e.g. a connection attempt already in progress). ESP_ERROR_CHECK
+ * on that would abort and reboot the device on ordinary Wi-Fi flakiness, so
+ * failures here are logged and left to the next disconnect event to retry.
+ */
+static void request_reconnect(void)
+{
+    const esp_err_t result = esp_wifi_connect();
+
+    if (result != ESP_OK) {
+        ESP_LOGW(
+            TAG,
+            "esp_wifi_connect() call failed: %s",
+            esp_err_to_name(result)
+        );
+    }
+}
+
 static void handle_wifi_event(
     void *handler_argument,
     esp_event_base_t event_base,
@@ -34,7 +53,7 @@ static void handle_wifi_event(
         event_base == WIFI_EVENT &&
         event_id == WIFI_EVENT_STA_START
     ) {
-        ESP_ERROR_CHECK(esp_wifi_connect());
+        request_reconnect();
         return;
     }
 
@@ -50,7 +69,7 @@ static void handle_wifi_event(
                 s_retry_count,
                 WIFI_MAXIMUM_RETRY_COUNT
             );
-            ESP_ERROR_CHECK(esp_wifi_connect());
+            request_reconnect();
         } else {
             xEventGroupSetBits(
                 s_wifi_event_group,
