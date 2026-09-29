@@ -1,15 +1,15 @@
-menu "MicroHydros configuration"
+menu "Telemetry configuration"
 
     menu "Device"
 
-        config MICROHYDROS_DEVICE_ID
+        config TELEMETRY_DEVICE_ID
             string "Device ID"
             default "esp32s3-01"
             help
                 Stable identifier used in the telemetry payload, MQTT client ID
                 and MQTT topic path.
 
-        config MICROHYDROS_TELEMETRY_INTERVAL_MS
+        config TELEMETRY_INTERVAL_MS
             int "Telemetry interval (milliseconds)"
             range 1000 3600000
             default 5000
@@ -20,11 +20,11 @@ menu "MicroHydros configuration"
 
     menu "Wi-Fi"
 
-        config MICROHYDROS_WIFI_SSID
+        config TELEMETRY_WIFI_SSID
             string "Wi-Fi SSID"
             default ""
 
-        config MICROHYDROS_WIFI_PASSWORD
+        config TELEMETRY_WIFI_PASSWORD
             string "Wi-Fi password"
             default ""
 
@@ -32,15 +32,15 @@ menu "MicroHydros configuration"
 
     menu "MQTT"
 
-        config MICROHYDROS_MQTT_BROKER_URI
+        config TELEMETRY_MQTT_BROKER_URI
             string "MQTT broker URI"
             default ""
 
-        config MICROHYDROS_MQTT_USERNAME
+        config TELEMETRY_MQTT_USERNAME
             string "MQTT username"
             default ""
 
-        config MICROHYDROS_MQTT_PASSWORD
+        config TELEMETRY_MQTT_PASSWORD
             string "MQTT password"
             default ""
 
@@ -48,12 +48,12 @@ menu "MicroHydros configuration"
 
     menu "SHT31"
 
-        config MICROHYDROS_SHT31_SDA_GPIO
+        config TELEMETRY_SHT31_SDA_GPIO
             int "SDA GPIO"
             range 0 48
             default 8
 
-        config MICROHYDROS_SHT31_SCL_GPIO
+        config TELEMETRY_SHT31_SCL_GPIO
             int "SCL GPIO"
             range 0 48
             default 9
@@ -62,21 +62,21 @@ menu "MicroHydros configuration"
 
     menu "DS18B20"
 
-        config MICROHYDROS_ONEWIRE_GPIO
+        config TELEMETRY_ONEWIRE_GPIO
             int "1-Wire GPIO"
             range 0 48
             default 5
 
-        config MICROHYDROS_ONEWIRE_UART_PORT
+        config TELEMETRY_ONEWIRE_UART_PORT
             int "1-Wire UART port"
             range 0 2
             default 1
 
-        config MICROHYDROS_WATER_DS18B20_ROM
+        config TELEMETRY_WATER_DS18B20_ROM
             hex "Water probe ROM address"
             default 0xBE0000006DEFD428
 
-        config MICROHYDROS_EXTERNAL_DS18B20_ROM
+        config TELEMETRY_EXTERNAL_DS18B20_ROM
             hex "External probe ROM address"
             default 0xDA00000070118128
 

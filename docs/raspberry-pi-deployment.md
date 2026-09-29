@@ -4,7 +4,7 @@
 
 Deferred.
 
-The active MicroHydros development environment runs on the Mac. The Raspberry Pi Zero 2W is not currently used as the Docker host because its memory is insufficient for the complete six-service stack.
+The active Telemetry development environment runs on the Mac. The Raspberry Pi Zero 2W is not currently used as the Docker host because its memory is insufficient for the complete six-service stack.
 
 This deployment target has not been abandoned. It may be reconsidered with a reduced service profile or more capable Raspberry Pi hardware.
 

@@ -8,7 +8,7 @@ VALID_ENVIRONMENT = {
     "MQTT_PORT": "1883",
     "MQTT_USERNAME": "telemetry-service",
     "MQTT_PASSWORD": "test-password",
-    "MQTT_CLIENT_ID": "microhydros-telemetry-service",
+    "MQTT_CLIENT_ID": "telemetry-service",
     "MQTT_KEEPALIVE_SECONDS": "60",
 }
 
@@ -27,7 +27,7 @@ def test_load_settings_reads_valid_environment(monkeypatch):
     assert settings.mqtt_port == 1883
     assert settings.mqtt_username == "telemetry-service"
     assert settings.mqtt_password == "test-password"
-    assert settings.mqtt_client_id == "microhydros-telemetry-service"
+    assert settings.mqtt_client_id == "telemetry-service"
     assert settings.mqtt_keepalive_seconds == 60
 
 

@@ -1,6 +1,6 @@
 # Architecture Decision Log
 
-This file records decisions that materially affect the MicroHydros architecture. Operational instructions belong in [`docker/README.md`](../docker/README.md), message formats belong in the [data contract](data-contract.md), and current topology belongs in the [system architecture](system-architecture.md).
+This file records decisions that materially affect the Telemetry architecture. Operational instructions belong in [`docker/README.md`](../docker/README.md), message formats belong in the [data contract](data-contract.md), and current topology belongs in the [system architecture](system-architecture.md).
 
 ## ADR-001: Use Python for telemetry validation
 
@@ -108,7 +108,7 @@ A dashboard created only through the Grafana interface exists inside the Grafana
 
 ### Decision
 
-Store the Grafana datasource, dashboard provider and exported MicroHydros dashboard as version-controlled provisioning files.
+Store the Grafana datasource, dashboard provider and exported Telemetry dashboard as version-controlled provisioning files.
 
 ### Consequences
 

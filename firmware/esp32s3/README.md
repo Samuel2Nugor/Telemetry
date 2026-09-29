@@ -1,6 +1,6 @@
-# MicroHydros ESP32-S3 Firmware
+# Telemetry ESP32-S3 Firmware
 
-This directory contains the ESP-IDF firmware for the MicroHydros sensor node. The firmware reads one SHT31 and two waterproof DS18B20 probes, builds raw telemetry, and publishes it to the MicroHydros MQTT broker over authenticated TLS.
+This directory contains the ESP-IDF firmware for the Telemetry sensor node. The firmware reads one SHT31 and two waterproof DS18B20 probes, builds raw telemetry, and publishes it to the Telemetry MQTT broker over authenticated TLS.
 
 The current implementation has been tested with ESP-IDF `v6.0.1` on an ESP32-S3 with Wi-Fi, PSRAM and a 16 MB flash device.
 
@@ -21,7 +21,7 @@ The default telemetry interval is `5000 ms`. A single `boot_id` is retained for 
 The raw topic is derived from the configured device ID:
 
 ```text
-microhydros/v1/devices/<device-id>/telemetry/raw
+telemetry/v1/devices/<device-id>/telemetry/raw
 ```
 
 The complete payload definition and validation behavior are documented in [`../../docs/data-contract.md`](../../docs/data-contract.md).
@@ -55,7 +55,7 @@ Pins and ROM addresses can be changed through Kconfig without editing the source
 
 | File | Responsibility |
 | ---- | -------------- |
-| `main/microhydros.c` | Startup, periodic sampling, telemetry payload creation and sequencing |
+| `main/main.c` | Startup, periodic sampling, telemetry payload creation and sequencing |
 | `main/sht31.c` | SHT31 initialization and temperature/humidity readings |
 | `main/ds18b20_manager.c` | 1-Wire setup, ROM discovery, role assignment and DS18B20 readings |
 | `main/wifi_manager.c` | Wi-Fi station connection and retries |
@@ -74,7 +74,7 @@ Open the project configuration menu from this directory:
 idf.py menuconfig
 ```
 
-Open **MicroHydros configuration** and set:
+Open **Telemetry configuration** and set:
 
 - Device ID and telemetry interval
 - Wi-Fi SSID and password

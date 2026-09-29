@@ -15,16 +15,29 @@
 static const char *TAG = "ds18b20_manager";
 
 #define WATER_DS18B20_ROM \
-    ((uint64_t)CONFIG_MICROHYDROS_WATER_DS18B20_ROM)
+    ((uint64_t)CONFIG_TELEMETRY_WATER_DS18B20_ROM)
 
 #define EXTERNAL_DS18B20_ROM \
-    ((uint64_t)CONFIG_MICROHYDROS_EXTERNAL_DS18B20_ROM)
+    ((uint64_t)CONFIG_TELEMETRY_EXTERNAL_DS18B20_ROM)
 
 #define ONEWIRE_GPIO \
-    ((gpio_num_t)CONFIG_MICROHYDROS_ONEWIRE_GPIO)
+    ((gpio_num_t)CONFIG_TELEMETRY_ONEWIRE_GPIO)
 
 #define ONEWIRE_UART_PORT \
-    CONFIG_MICROHYDROS_ONEWIRE_UART_PORT
+    CONFIG_TELEMETRY_ONEWIRE_UART_PORT
+
+/*
+ * The DS18B20 returns this exact value (raw register 0x0550, an exact binary
+ * fraction) after a power-on reset or a parasitic-power brownout on the bus.
+ * A successful read still reports ESP_OK, so it must be filtered here or it
+ * reaches the backend labelled "ok" and looks like a real 85 C spike.
+ */
+#define DS18B20_POWER_ON_RESET_SENTINEL_C 85.0f
+
+static bool is_power_on_reset_sentinel(float temperature_c)
+{
+    return temperature_c == DS18B20_POWER_ON_RESET_SENTINEL_C;
+}
 
 static onewire_bus_handle_t s_bus = NULL;
 static ds18b20_device_handle_t s_water_device = NULL;
@@ -206,7 +219,14 @@ esp_err_t ds18b20_manager_read(ds18b20_readings_t *readings)
             &readings->water_temperature_c
         );
 
-        if (result == ESP_OK) {
+        if (result == ESP_OK && is_power_on_reset_sentinel(readings->water_temperature_c)) {
+            readings->water_status = "invalid_value";
+            ESP_LOGW(
+                TAG,
+                "Water DS18B20 reported the power-on-reset sentinel "
+                "(85.00 C); treating the reading as invalid"
+            );
+        } else if (result == ESP_OK) {
             readings->water_valid = true;
             readings->water_status = "ok";
             ESP_LOGI(
@@ -226,7 +246,14 @@ esp_err_t ds18b20_manager_read(ds18b20_readings_t *readings)
             &readings->external_temperature_c
         );
 
-        if (result == ESP_OK) {
+        if (result == ESP_OK && is_power_on_reset_sentinel(readings->external_temperature_c)) {
+            readings->external_status = "invalid_value";
+            ESP_LOGW(
+                TAG,
+                "External DS18B20 reported the power-on-reset sentinel "
+                "(85.00 C); treating the reading as invalid"
+            );
+        } else if (result == ESP_OK) {
             readings->external_valid = true;
             readings->external_status = "ok";
             ESP_LOGI(

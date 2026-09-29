@@ -15,7 +15,7 @@ from telemetry_service.mqtt_client import (
 
 
 def test_extract_device_id_from_raw_topic():
-    topic = "microhydros/v1/devices/esp32s3-01/telemetry/raw"
+    topic = "telemetry/v1/devices/esp32s3-01/telemetry/raw"
 
     assert extract_device_id(topic) == "esp32s3-01"
 
@@ -24,9 +24,9 @@ def test_extract_device_id_from_raw_topic():
     "topic",
     [
         "",
-        "microhydros/v1/devices//telemetry/raw",
-        "microhydros/v1/devices/esp32s3-01/telemetry",
-        "microhydros/v1/devices/esp32s3-01/status",
+        "telemetry/v1/devices//telemetry/raw",
+        "telemetry/v1/devices/esp32s3-01/telemetry",
+        "telemetry/v1/devices/esp32s3-01/status",
         "another/v1/devices/esp32s3-01/telemetry/raw",
     ],
 )
@@ -41,7 +41,7 @@ def test_build_validated_topic():
     )
 
     assert topic == (
-        "microhydros/v1/devices/esp32s3-01/"
+        "telemetry/v1/devices/esp32s3-01/"
         "telemetry/validated/water_temperature"
     )
 
@@ -50,7 +50,7 @@ def test_build_rejected_topic():
     topic = build_rejected_topic(device_id="esp32s3-01")
 
     assert topic == (
-        "microhydros/v1/devices/esp32s3-01/telemetry/rejected"
+        "telemetry/v1/devices/esp32s3-01/telemetry/rejected"
     )
 
 def test_on_message_logs_processing_summary_and_publishes(monkeypatch, caplog):
@@ -79,7 +79,7 @@ def test_on_message_logs_processing_summary_and_publishes(monkeypatch, caplog):
     monkeypatch.setattr(service, "_publish_json", publish_json)
 
     message = SimpleNamespace(
-        topic="microhydros/v1/devices/esp32s3-01/telemetry/raw",
+        topic="telemetry/v1/devices/esp32s3-01/telemetry/raw",
         payload=b'{"test":true}',
     )
 
@@ -113,7 +113,7 @@ def test_duplicate_message_is_published_only_once(monkeypatch):
     monkeypatch.setattr(service, "_publish_json", publish_json)
 
     message = SimpleNamespace(
-        topic="microhydros/v1/devices/esp32s3-01/telemetry/raw",
+        topic="telemetry/v1/devices/esp32s3-01/telemetry/raw",
         payload=b'{"device_id":"esp32s3-01","boot_id":"boot-1","sequence":42}',
     )
 
@@ -140,7 +140,7 @@ def test_new_sequence_or_boot_is_published(monkeypatch):
     publish_json = Mock(return_value=True)
     monkeypatch.setattr(service, "_publish_json", publish_json)
 
-    topic = "microhydros/v1/devices/esp32s3-01/telemetry/raw"
+    topic = "telemetry/v1/devices/esp32s3-01/telemetry/raw"
     for boot_id, sequence in [
         ("boot-1", 42),
         ("boot-1", 43),

@@ -1,6 +1,6 @@
 # Docker configuration
 
-This directory contains the configuration for the six MicroHydros backend services. The ESP32-S3 sends readings from the physical sensors every five seconds by default; the backend validates them and stores accepted measurements. See the [root README](../README.md) for startup, shutdown, service addresses and telemetry verification. See the [data contract](../docs/data-contract.md) for MQTT payloads and validation rules.
+This directory contains the configuration for the six Telemetry backend services. The ESP32-S3 sends readings from the physical sensors every five seconds by default; the backend validates them and stores accepted measurements. See the [root README](../README.md) for startup, shutdown, service addresses and telemetry verification. See the [data contract](../docs/data-contract.md) for MQTT payloads and validation rules.
 
 ## Configuration files
 
@@ -51,7 +51,7 @@ Create `.env` from `.env.example` if needed. Configure the MQTT settings for the
 ```dotenv
 MQTT_HOST=mosquitto
 MQTT_PORT=8883
-MQTT_CA_CERT=/etc/microhydros/certs/ca.crt
+MQTT_CA_CERT=/etc/telemetry/certs/ca.crt
 MQTT_USERNAME=telemetry-service
 TELEGRAF_MQTT_USERNAME=telegraf
 ```
@@ -70,7 +70,7 @@ Provision these files locally before starting the services:
 
 The broker certificate's Subject Alternative Names must cover the names clients use: `<broker-hostname>.local` for the device, `mosquitto` for containers and `localhost` for local checks, plus IP address `127.0.0.1`.
 
-Mosquitto mounts the certificate directory at `/mosquitto/certs`. Backend MQTT clients mount the public CA certificate at `/etc/microhydros/certs/ca.crt`. Keep the CA private key outside containers. Docker Compose does not create or renew certificates.
+Mosquitto mounts the certificate directory at `/mosquitto/certs`. Backend MQTT clients mount the public CA certificate at `/etc/telemetry/certs/ca.crt`. Keep the CA private key outside containers. Docker Compose does not create or renew certificates.
 
 MQTT listens on port `8883` with TLS. The plaintext listener on `1883` is disabled.
 
@@ -87,7 +87,7 @@ Other operations are denied. The status permissions reserve a topic for a future
 
 ## Broker healthcheck
 
-The broker healthcheck publishes to `microhydros/health/mosquitto` using TLS, MQTT v5 and QoS 1. It reuses the telemetry-service credentials. An accepted publish may report MQTT reason code `0` or `16` (no subscriber).
+The broker healthcheck publishes to `telemetry/health/mosquitto` using TLS, MQTT v5 and QoS 1. It reuses the telemetry-service credentials. An accepted publish may report MQTT reason code `0` or `16` (no subscriber).
 
 The healthcheck confirms that the broker accepts a publish; use the verification steps in the root README to check the complete sensor-to-dashboard flow.
 
@@ -97,11 +97,11 @@ Import `docker/node-red/flows/validated-telemetry.json` in the Node-RED editor, 
 
 - Broker: `mosquitto:8883`
 - TLS: enabled, with broker certificate verification
-- CA certificate: `/etc/microhydros/certs/ca.crt`
+- CA certificate: `/etc/telemetry/certs/ca.crt`
 - Server name: `mosquitto`
 - MQTT username and password: the `node-red` account
 
-The flow subscribes to `microhydros/v1/devices/+/telemetry/validated/+` at QoS `1` and displays the decoded messages in Debug. Credentials are not included in the exported flow. Deploy it after configuring the broker, and export changes made in the editor back to the repository flow file.
+The flow subscribes to `telemetry/v1/devices/+/telemetry/validated/+` at QoS `1` and displays the decoded messages in Debug. Credentials are not included in the exported flow. Deploy it after configuring the broker, and export changes made in the editor back to the repository flow file.
 
 ## Telegraf and InfluxDB
 

@@ -11,7 +11,7 @@ from telemetry_service.validator import validate_raw_payload
 
 LOGGER = logging.getLogger(__name__)
 
-BASE_TOPIC = "microhydros/v1/devices"
+BASE_TOPIC = "telemetry/v1/devices"
 RAW_TOPIC_FILTER = f"{BASE_TOPIC}/+/telemetry/raw"
 MQTT_QOS = 1
 MAX_RECENT_MESSAGES = 4096
@@ -208,7 +208,7 @@ def extract_device_id(topic: str) -> str | None:
     if len(parts) != 6:
         return None
 
-    if parts[0:3] != ["microhydros", "v1", "devices"]:
+    if parts[0:3] != ["telemetry", "v1", "devices"]:
         return None
 
     if parts[4:6] != ["telemetry", "raw"]:

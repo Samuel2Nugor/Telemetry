@@ -84,7 +84,7 @@ static void handle_wifi_event(
 
 esp_err_t wifi_manager_connect(void)
 {
-    if (strlen(CONFIG_MICROHYDROS_WIFI_SSID) == 0) {
+    if (strlen(CONFIG_TELEMETRY_WIFI_SSID) == 0) {
         ESP_LOGE(TAG, "Wi-Fi SSID is not configured");
         return ESP_ERR_INVALID_ARG;
     }
@@ -134,7 +134,7 @@ esp_err_t wifi_manager_connect(void)
     if (
         strlcpy(
             (char *)configuration.sta.ssid,
-            CONFIG_MICROHYDROS_WIFI_SSID,
+            CONFIG_TELEMETRY_WIFI_SSID,
             sizeof(configuration.sta.ssid)
         ) >= sizeof(configuration.sta.ssid)
     ) {
@@ -145,7 +145,7 @@ esp_err_t wifi_manager_connect(void)
     if (
         strlcpy(
             (char *)configuration.sta.password,
-            CONFIG_MICROHYDROS_WIFI_PASSWORD,
+            CONFIG_TELEMETRY_WIFI_PASSWORD,
             sizeof(configuration.sta.password)
         ) >= sizeof(configuration.sta.password)
     ) {

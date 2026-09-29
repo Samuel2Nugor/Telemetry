@@ -1,20 +1,20 @@
 # ESP32: publish only its own telemetry and availability
 user esp32s3-01
-topic write microhydros/v1/devices/esp32s3-01/telemetry/raw
-topic write microhydros/v1/devices/esp32s3-01/status
+topic write telemetry/v1/devices/esp32s3-01/telemetry/raw
+topic write telemetry/v1/devices/esp32s3-01/status
 
 # Validator: consume raw readings and publish results
 user telemetry-service
-topic read microhydros/v1/devices/+/telemetry/raw
-topic write microhydros/v1/devices/+/telemetry/validated/+
-topic write microhydros/v1/devices/+/telemetry/rejected
-topic write microhydros/health/mosquitto
+topic read telemetry/v1/devices/+/telemetry/raw
+topic write telemetry/v1/devices/+/telemetry/validated/+
+topic write telemetry/v1/devices/+/telemetry/rejected
+topic write telemetry/health/mosquitto
 
 # Node-RED: inspect validated readings and availability
 user node-red
-topic read microhydros/v1/devices/+/telemetry/validated/+
-topic read microhydros/v1/devices/+/status
+topic read telemetry/v1/devices/+/telemetry/validated/+
+topic read telemetry/v1/devices/+/status
 
 # Telegraf: consume validated readings for storage
 user telegraf
-topic read microhydros/v1/devices/+/telemetry/validated/+
+topic read telemetry/v1/devices/+/telemetry/validated/+

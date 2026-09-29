@@ -102,7 +102,7 @@ static esp_err_t publish_telemetry(
                 "\"water_ds18b20\":\"%s\""
             "}"
         "}",
-        CONFIG_MICROHYDROS_DEVICE_ID,
+        CONFIG_TELEMETRY_DEVICE_ID,
         boot_id,
         sequence,
         uptime_ms,
@@ -210,7 +210,7 @@ void app_main(void)
 
     ESP_LOGI(
         TAG,
-        "MicroHydros firmware started"
+        "Telemetry firmware started"
     );
 
     ESP_LOGI(
@@ -323,7 +323,7 @@ void app_main(void)
             );
             vTaskDelayUntil(
                 &last_wake_time,
-                pdMS_TO_TICKS(CONFIG_MICROHYDROS_TELEMETRY_INTERVAL_MS)
+                pdMS_TO_TICKS(CONFIG_TELEMETRY_INTERVAL_MS)
             );
             continue;
         }
@@ -350,7 +350,6 @@ void app_main(void)
 
         if (publish_result == ESP_OK) {
             ESP_LOGI(TAG, "Telemetry was queued successfully");
-            sequence++;
         } else {
             ESP_LOGE(
                 TAG,
@@ -359,9 +358,17 @@ void app_main(void)
             );
         }
 
+        /*
+         * Advance unconditionally: a failed publish must still consume its
+         * sequence number, otherwise a later successful publish would reuse
+         * a sequence the backend already saw and get dropped as a duplicate,
+         * silently losing real data instead of the sample that failed.
+         */
+        sequence++;
+
         vTaskDelayUntil(
             &last_wake_time,
-            pdMS_TO_TICKS(CONFIG_MICROHYDROS_TELEMETRY_INTERVAL_MS)
+            pdMS_TO_TICKS(CONFIG_TELEMETRY_INTERVAL_MS)
         );
     }
 }

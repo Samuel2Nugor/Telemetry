@@ -14,7 +14,7 @@ services:
           -u "$$MQTT_HEALTHCHECK_USERNAME"
           -P "$$MQTT_HEALTHCHECK_PASSWORD"
           -V mqttv5 -q 1
-          -t microhydros/health/mosquitto -m ok
+          -t telemetry/health/mosquitto -m ok
           >/dev/null 2>&1
       interval: 10s
       timeout: 5s
@@ -27,7 +27,7 @@ services:
       - ./docker/mosquitto/certs:/mosquitto/certs:ro
       - mosquitto-data:/mosquitto/data
     networks:
-      - microhydros-network
+      - telemetry-network
 
   telemetry-service:
     build:
@@ -40,9 +40,9 @@ services:
     env_file:
       - .env
     volumes:
-      - ./docker/mosquitto/certs/ca.crt:/etc/microhydros/certs/ca.crt:ro
+      - ./docker/mosquitto/certs/ca.crt:/etc/telemetry/certs/ca.crt:ro
     networks:
-      - microhydros-network
+      - telemetry-network
 
   node-red:
     image: nodered/node-red:5.0.7
@@ -56,9 +56,9 @@ services:
       TZ: Europe/Stockholm
     volumes:
       - node-red-data:/data
-      - ./docker/mosquitto/certs/ca.crt:/etc/microhydros/certs/ca.crt:ro
+      - ./docker/mosquitto/certs/ca.crt:/etc/telemetry/certs/ca.crt:ro
     networks:
-      - microhydros-network
+      - telemetry-network
 
   influxdb:
     image: influxdb:2.8.0
@@ -83,7 +83,7 @@ services:
       - influxdb-data:/var/lib/influxdb2
       - influxdb-config:/etc/influxdb2
     networks:
-      - microhydros-network
+      - telemetry-network
 
   grafana:
     image: grafana/grafana:12.4.0
@@ -111,7 +111,7 @@ services:
       - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./docker/grafana/dashboards:/etc/grafana/dashboards:ro
     networks:
-      - microhydros-network
+      - telemetry-network
 
   telegraf:
     image: telegraf:1.40.0
@@ -129,9 +129,9 @@ services:
       INFLUXDB_BUCKET: ${INFLUXDB_BUCKET}
     volumes:
       - ./docker/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
-      - ./docker/mosquitto/certs/ca.crt:/etc/microhydros/certs/ca.crt:ro
+      - ./docker/mosquitto/certs/ca.crt:/etc/telemetry/certs/ca.crt:ro
     networks:
-      - microhydros-network
+      - telemetry-network
 
 volumes:
   mosquitto-data:
@@ -141,5 +141,5 @@ volumes:
   grafana-data:
 
 networks:
-  microhydros-network:
+  telemetry-network:
     driver: bridge

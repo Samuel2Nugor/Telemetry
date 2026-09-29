@@ -2,7 +2,7 @@
 
 ## Overview
 
-MicroHydros collects temperature and humidity readings from an ESP32-S3 sensor node. The device publishes raw readings over Wi-Fi and TLS MQTT. Services running in Docker containers validate the readings, store accepted measurements and display them in a dashboard.
+Telemetry collects temperature and humidity readings from an ESP32-S3 sensor node. The device publishes raw readings over Wi-Fi and TLS MQTT. Services running in Docker containers validate the readings, store accepted measurements and display them in a dashboard.
 
 The prototype has been tested with one SHT31 and two waterproof DS18B20 probes. It publishes one combined message per cycle, every five seconds by default. A tested cycle produced four validated measurements and no rejections (`validated=4 rejected=0`). The interval is configurable in the firmware.
 
@@ -74,7 +74,7 @@ The backend logs raw-message receipt, validated and rejected counts, and the top
 ## Storage and interfaces
 
 Docker volumes preserve Mosquitto, Node-RED, InfluxDB and Grafana data across container restarts.
-Grafana's data source and MicroHydros dashboard are also provisioned from files in the repository.
+Grafana's data source and Telemetry dashboard are also provisioned from files in the repository.
 
 | Interface | Host port | Purpose |
 | --------- | --------- | ------- |

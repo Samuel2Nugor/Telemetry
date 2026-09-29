@@ -2,7 +2,7 @@
 
 ## Purpose and implementation status
 
-This document defines the MQTT topics and JSON payloads exchanged by the MicroHydros sensor node, Python telemetry service, Node-RED and Telegraf.
+This document defines the MQTT topics and JSON payloads exchanged by the Telemetry sensor node, Python telemetry service, Node-RED and Telegraf.
 Contract version `v1` uses the numeric JSON field `"schema_version": 1`.
 
 Raw, validated and rejected telemetry are implemented. The ESP32-S3 has published real readings from one SHT31 and two waterproof DS18B20 probes.
@@ -19,25 +19,25 @@ Topic ACLs restrict which clients may publish or subscribe. TLS and authenticati
 
 | Topic pattern | Publisher | Consumer | Meaning |
 | --- | --- | --- | --- |
-| `microhydros/v1/devices/{device_id}/telemetry/raw` | ESP32-S3 | Python telemetry service | Combined sensor readings and statuses |
-| `microhydros/v1/devices/{device_id}/telemetry/validated/{measurement}` | Python telemetry service | Node-RED and Telegraf | One accepted measurement |
-| `microhydros/v1/devices/{device_id}/telemetry/rejected` | Python telemetry service | Authorized diagnostic clients | A rejected message or measurement |
-| `microhydros/v1/devices/{device_id}/status` | Device or broker Last Will, if implemented | Status consumers | Proposed online/offline status |
+| `telemetry/v1/devices/{device_id}/telemetry/raw` | ESP32-S3 | Python telemetry service | Combined sensor readings and statuses |
+| `telemetry/v1/devices/{device_id}/telemetry/validated/{measurement}` | Python telemetry service | Node-RED and Telegraf | One accepted measurement |
+| `telemetry/v1/devices/{device_id}/telemetry/rejected` | Python telemetry service | Authorized diagnostic clients | A rejected message or measurement |
+| `telemetry/v1/devices/{device_id}/status` | Device or broker Last Will, if implemented | Status consumers | Proposed online/offline status |
 
-`{device_id}` identifies one device; the tested prototype uses `esp32s3-01`. `{measurement}` is one of the four names in the validated measurement mapping below. The Python service subscribes to `microhydros/v1/devices/+/telemetry/raw`. Node-RED and Telegraf subscribe to `microhydros/v1/devices/+/telemetry/validated/+`. In MQTT subscriptions, each `+` matches exactly one topic level.
+`{device_id}` identifies one device; the tested prototype uses `esp32s3-01`. `{measurement}` is one of the four names in the validated measurement mapping below. The Python service subscribes to `telemetry/v1/devices/+/telemetry/raw`. Node-RED and Telegraf subscribe to `telemetry/v1/devices/+/telemetry/validated/+`. In MQTT subscriptions, each `+` matches exactly one topic level.
 
 Raw, validated and rejected telemetry use QoS `1`, are **not retained**, and carry UTF-8 JSON. QoS `1` permits redelivery, so consumers should not assume every delivered message is unique. The telemetry service drops recently processed raw cycles using `(device_id, boot_id, sequence)`; this record is in memory and resets when the service restarts. Sequence-gap detection is not implemented.
 
 ## Raw telemetry
 
-The ESP32-S3 publishes one combined message to `microhydros/v1/devices/{device_id}/telemetry/raw` per successful measurement cycle. The firmware's current default interval is five seconds (`5000 ms`), configurable through ESP-IDF. The interval is firmware behavior rather than a rule enforced by the JSON validator.
+The ESP32-S3 publishes one combined message to `telemetry/v1/devices/{device_id}/telemetry/raw` per successful measurement cycle. The firmware's current default interval is five seconds (`5000 ms`), configurable through ESP-IDF. The interval is firmware behavior rather than a rule enforced by the JSON validator.
 
 ### Example of a successful cycle
 
 Topic:
 
 ```text
-microhydros/v1/devices/esp32s3-01/telemetry/raw
+telemetry/v1/devices/esp32s3-01/telemetry/raw
 ```
 
 Payload (illustrative values):
@@ -124,7 +124,7 @@ A numeric value outside its range is rejected with `out_of_plausible_range`. Boo
 
 ## Validated telemetry
 
-For each accepted raw measurement, the Python service publishes one JSON message to `microhydros/v1/devices/{device_id}/telemetry/validated/{measurement}`. A raw message containing four accepted measurements produces four separate validated publications.
+For each accepted raw measurement, the Python service publishes one JSON message to `telemetry/v1/devices/{device_id}/telemetry/validated/{measurement}`. A raw message containing four accepted measurements produces four separate validated publications.
 
 ### Measurement mapping
 
@@ -142,7 +142,7 @@ The DS18B20 probes are assigned to water and external roles by their configured 
 Topic:
 
 ```text
-microhydros/v1/devices/esp32s3-01/telemetry/validated/water_temperature
+telemetry/v1/devices/esp32s3-01/telemetry/validated/water_temperature
 ```
 
 Payload:
@@ -181,7 +181,7 @@ Accepted measurements from one raw message share the same `timestamp`, `device_i
 
 ## Rejected telemetry
 
-The Python service publishes failures to `microhydros/v1/devices/{device_id}/telemetry/rejected`. Rejected telemetry is diagnostic and is not written to the normal InfluxDB measurement series. A client that needs to subscribe to rejected topics must have suitable ACL permission.
+The Python service publishes failures to `telemetry/v1/devices/{device_id}/telemetry/rejected`. Rejected telemetry is diagnostic and is not written to the normal InfluxDB measurement series. A client that needs to subscribe to rejected topics must have suitable ACL permission.
 
 There are two rejection scopes:
 
@@ -264,12 +264,12 @@ The following is a proposed contract for device availability. The current sensor
 
 | Property | Proposed value |
 | --- | --- |
-| Topic | `microhydros/v1/devices/{device_id}/status` |
+| Topic | `telemetry/v1/devices/{device_id}/status` |
 | QoS | `1` |
 | Retained | `true` |
 | Payload | UTF-8 JSON |
 
-A status subscriber could use `microhydros/v1/devices/+/status`, subject to its MQTT ACL.
+A status subscriber could use `telemetry/v1/devices/+/status`, subject to its MQTT ACL.
 
 Planned online payload, published after MQTT connection:
 

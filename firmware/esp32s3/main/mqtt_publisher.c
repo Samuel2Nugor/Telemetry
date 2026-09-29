@@ -19,8 +19,8 @@ extern const char mqtt_ca_crt_start[]
 static const char *TAG = "mqtt_publisher";
 
 static const char *RAW_TELEMETRY_TOPIC =
-    "microhydros/v1/devices/"
-    CONFIG_MICROHYDROS_DEVICE_ID
+    "telemetry/v1/devices/"
+    CONFIG_TELEMETRY_DEVICE_ID
     "/telemetry/raw";
 
 static EventGroupHandle_t s_mqtt_event_group;
@@ -81,14 +81,14 @@ esp_err_t mqtt_publisher_start(void)
         return ESP_OK;
     }
 
-    if (strlen(CONFIG_MICROHYDROS_MQTT_BROKER_URI) == 0 ||
-        strlen(CONFIG_MICROHYDROS_MQTT_USERNAME) == 0 ||
-        strlen(CONFIG_MICROHYDROS_MQTT_PASSWORD) == 0) {
+    if (strlen(CONFIG_TELEMETRY_MQTT_BROKER_URI) == 0 ||
+        strlen(CONFIG_TELEMETRY_MQTT_USERNAME) == 0 ||
+        strlen(CONFIG_TELEMETRY_MQTT_PASSWORD) == 0) {
         ESP_LOGE(TAG, "MQTT configuration is incomplete");
         return ESP_ERR_INVALID_STATE;
     }
 
-    if (strncmp(CONFIG_MICROHYDROS_MQTT_BROKER_URI,
+    if (strncmp(CONFIG_TELEMETRY_MQTT_BROKER_URI,
                 "mqtts://", 8) != 0) {
         ESP_LOGE(TAG, "MQTT broker URI must use mqtts://");
         return ESP_ERR_INVALID_ARG;
@@ -103,17 +103,17 @@ esp_err_t mqtt_publisher_start(void)
 
     const esp_mqtt_client_config_t mqtt_config = {
         .broker.address.uri =
-            CONFIG_MICROHYDROS_MQTT_BROKER_URI,
+            CONFIG_TELEMETRY_MQTT_BROKER_URI,
 
         .broker.verification.certificate = mqtt_ca_crt_start,
         .broker.verification.skip_cert_common_name_check = false,
 
-        .credentials.client_id = CONFIG_MICROHYDROS_DEVICE_ID,
+        .credentials.client_id = CONFIG_TELEMETRY_DEVICE_ID,
         .credentials.username =
-            CONFIG_MICROHYDROS_MQTT_USERNAME,
+            CONFIG_TELEMETRY_MQTT_USERNAME,
 
         .credentials.authentication.password =
-            CONFIG_MICROHYDROS_MQTT_PASSWORD,
+            CONFIG_TELEMETRY_MQTT_PASSWORD,
 
         .session.keepalive = 60,
         .network.reconnect_timeout_ms = 5000,
