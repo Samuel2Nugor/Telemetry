@@ -33,3 +33,6 @@ firmware/esp32s3/sdkconfig.old
 firmware/esp32s3/managed_components/
 .vscode/
 *.egg-info/
+
+# Local Claude Code instructions
+CLAUDE.md
