@@ -419,9 +419,12 @@ docs/data-contract.md
 
 The telemetry validation service includes automated Python tests.
 
-Run the tests from the project environment with:
+Install the service and its development dependencies into a virtual environment, then run the tests:
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
 pytest
 ```
 

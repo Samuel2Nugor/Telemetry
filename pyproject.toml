@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telemetry-service"
+version = "0.1.0"
+description = "MQTT telemetry validation service for ESP32-S3 sensor nodes"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "paho-mqtt==2.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+]
+
+[project.scripts]
+telemetry-service = "telemetry_service.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
